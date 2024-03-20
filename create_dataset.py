@@ -44,18 +44,20 @@ if __name__=='__main__':
         threads[i]=Thread(target=save_data,args=[n*i,n,train_dir])
         threads[i].start()
     
+    # waiting for all the threads to end
     for i in range(NUM_THREADS):
         threads[i].join()
 
     # Test set
-    # print("TEST SET CREATION")
-    # threads=[0]*NUM_THREADS
-    # n=int(NUM['test']/NUM_THREADS)
-    # for i in range(NUM_THREADS):
-    #     threads[i]=Thread(target=save_data,args=[n*i,n,test_dir])
-    #     threads[i].start()
+    print("TEST SET CREATION")
+    threads=[0]*NUM_THREADS
+    n=int(NUM['test']/NUM_THREADS)
+    for i in range(NUM_THREADS):
+        threads[i]=Thread(target=save_data,args=[n*i,n,test_dir])
+        threads[i].start()
     
-    # for i in range(NUM_THREADS):
-    #     threads[i].join()
+    # waiting for all the threads to end
+    for i in range(NUM_THREADS):
+        threads[i].join()
 
 
