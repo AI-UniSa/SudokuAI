@@ -86,10 +86,13 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
 
             val_loss.append(criterion.evaluate(o, y))
 
-            val_acc.append(mean((o==y)))
+            # It's not the best way to cast the output, but is surely the easyest
+            #   Watch out that it keeps the integer part of the value, so as example 
+            #   bot 3.3 and 3.9 are casted to 3
+            val_acc.append(mean((o.int()==y)))
             
     val_loss = mean(val_loss)
-    val_acc = mean(val_acc)
+    val_acc = mean(mean(val_acc))
     
     return val_loss, val_acc
 
@@ -133,15 +136,15 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
         val_acc.append(val_epoch_accuracy)
 
         # Print metrics
-        print(f'Current accuracy: {val_epoch_accuracy}')
-        print(f'Current loss: {val_epoch_loss}')
+        print('Current accuracy:{:.4f}'.format(val_epoch_accuracy))
+        print('Current loss:    {:.4f}'.format(val_epoch_loss))
 
         # Early stopping management
         if val_epoch_loss < prev_loss:
             prev_loss = val_epoch_loss
             no_gain = 0  #  Resetting early stopping counter
 
-            save_path = os.path.join("..",experiment_name,"checkpoints")
+            save_path = os.path.join("checkpoints",experiment_name)
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
             torch.save(model,os.path.join(save_path, "epoch_{}.pth".format(epoch)))
