@@ -23,9 +23,9 @@ class Sudoku_MLP(nn.Module):
         self._input_layer = MLP(c.INPUT_SIZE, inner_size, input_layers_num)
         self._output_layer = MLP(inner_size, c.OUTPUT_SIZE, output_layers_num)
 
-    def forward(self, x):
-        x=self._input_layer(x)
-        x=self._output_layer(x)
+    def forward(self, x:t.Tensor):
+        x=self._input_layer(x) 
+        x=self._output_layer(x) 
         return x
 
 class Sudoku_MLP_helper(Helper):

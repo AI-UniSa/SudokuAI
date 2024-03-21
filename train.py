@@ -12,7 +12,6 @@ from tqdm import tqdm
 from argparse import ArgumentParser
 
 from train_hp import *
-from utils import checkpoint_save, checkpoint_load
 
 def mean(l):
     return sum(l)/len(l)
@@ -87,7 +86,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
 
             val_loss.append(criterion.evaluate(o, y))
 
-            val_acc.append(torch.mean(o==y).numpy()[0])
+            val_acc.append(mean((o==y)))
             
     val_loss = mean(val_loss)
     val_acc = mean(val_acc)
@@ -141,7 +140,11 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
         if val_epoch_loss < prev_loss:
             prev_loss = val_epoch_loss
             no_gain = 0  #  Resetting early stopping counter
-            checkpoint_save(experiment_name, model, epoch + 1)
+
+            save_path = os.path.join("..",experiment_name,"checkpoints")
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            torch.save(model,os.path.join(save_path, "epoch_{}.pth".format(epoch)))
         else:
             no_gain += 1
 
@@ -185,7 +188,7 @@ def main():
 
     if args.checkpoint is not None:
         print("Loading checkpoint {}...".format(args.checkpoint))
-        checkpoint_load(model, args.checkpoint)
+        model=torch.load( args.checkpoint)
         # model.load_state_dict(torch.load(args.checkpoint))
         # Gatherng the starting epoch from the weights
         try:
