@@ -30,7 +30,7 @@ def get_last_value(path):
 
 def set_last_value(path,num):
     with open(os.path.join(path,'count.txt'),'w') as f:
-        f.write(num)
+        f.write(str(num))
         
 
 def save_data(start,num,path,idx):
