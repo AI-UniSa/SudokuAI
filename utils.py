@@ -23,3 +23,4 @@ def checkpoint_load(model, path):
     model.backbone.load_state_dict(checkpoint['backbone_state_dict'])
     for pipeline, pipeline_state_dict in zip(model.out_pipelines, checkpoint['out_pipelines_state_dicts']):
         pipeline.load_state_dict(pipeline_state_dict)
+

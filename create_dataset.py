@@ -3,26 +3,16 @@ from urllib.parse import urlencode
 from tqdm import tqdm
 from threading import Thread
 import os
-
+import sudokum
+import random
 
 NUM={'train':int(2e4),'test':int(2e2)}
 NUM_THREADS=8
 
-def get_sudoku(difficulty:str='random')->list:
-    choiches=['random','easy','medium','hard']
-    if difficulty not in choiches:
-        raise ValueError(f"Invalid argument '{difficulty}'. Allowed values are: {', '.join(choiches)}")
-
-    url=f'https://sugoku.onrender.com/board?difficulty={difficulty}'
-    message=requests.get(url).json()
-    return message['board']
-
-def solve_sudoku(sudoku):
-    url='https://sugoku.onrender.com/solve'
-    header= {'Content-type': 'application/x-www-form-urlencoded'}
-    payload = urlencode({'board':sudoku})
-    message = requests.post(url, data=payload, headers=header).json()
-    return message['solution']
+def get_sudoku()->list:
+    difficulty=random.uniform(0.3,0.8)
+    board = sudokum.generate(mask_rate=difficulty)
+    return board
 
 def get_last_value(path):
     with open(os.path.join(path,'count.txt'),'r') as f:
@@ -35,11 +25,15 @@ def set_last_value(path,num):
 
 def save_data(start,num,path,idx):
     for i in tqdm(range(num),desc='Thread {:3d}'.format(idx)):
-        sudoku=get_sudoku()
+        # Generating new sudokus until one of them is solvable
+        solved=False
+        while not solved:
+            sudoku=get_sudoku()
+            solved, solution= sudokum.solve(sudoku)
+        
         with open(f'{path}\\data\\{start+i}.txt','w') as f:
             f.write(str(sudoku))
-        
-        solution=solve_sudoku(sudoku)
+          
         with open(f'{path}\\gt\\{start+i}.txt','w') as f:
             f.write(str(solution))
 
