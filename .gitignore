@@ -3,3 +3,5 @@
 *.pyc
 /models/__pycache__
 *.pth
+/dataset/train
+/dataset/test
