@@ -38,14 +38,21 @@ if __name__=='__main__':
     if not os.path.exists(os.path.join(base_path,'dataset.zip')):
         raise RuntimeError('Missing dataset file, clone the repository again to correctly setup the dataset')
     
-    print("Extracting dataset, it can take a few minutes...")
-    
-    start_time=time.process_time()
-    with zipfile.ZipFile(os.path.join(base_path,'dataset.zip'), 'r') as zip_ref:     
-        zip_ref.extractall(base_path)
-    
-    end_time=time.process_time()
-    print("Dataset extracted successfully in {:.2f} seconds !".format(end_time-start_time))
+    # Extracting the dataset if the count files do not exist
+    # TODO: use something like sha256 or md5 value instead of the file presence, to be sure that
+    #       the whole dataset is correct
+    if  not os.path.exists(os.path.join(base_path,'train','count.txt')) or \
+        not os.path.exists(os.path.join(base_path,'test','count.txt')):
+        print("Extracting dataset, it can take a few minutes...")
+        
+        start_time=time.process_time()
+        with zipfile.ZipFile(os.path.join(base_path,'dataset.zip'), 'r') as zip_ref:     
+            zip_ref.extractall(base_path)
+        
+        end_time=time.process_time()
+        print("Dataset extracted successfully in {:.2f} seconds !".format(end_time-start_time))
+    else:
+        print("Dataset already existing")
 
     ## Creating new samples if required ##
     if args.add_samples:
