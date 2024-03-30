@@ -1,5 +1,3 @@
-from model_zoo import ModelZoo
-from dataset import SudokuDataset
 import os
 
 import torch
@@ -11,14 +9,16 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from argparse import ArgumentParser
 
-from train_hp import *
+from training.train_hp import *
+from training.model_zoo import ModelZoo
+from training.dataset import SudokuDataset
 
 def mean(l):
     return sum(l)/len(l)
 
 def parse_args():
     parser = ArgumentParser()
-
+    # TODO: update this
     # data
     # The dataset organization is the following:
     #   args.data:
@@ -86,6 +86,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
 
             val_loss.append(criterion.evaluate(o, y))
 
+            # TODO: fix this
             # It's not the best way to cast the output, but is surely the easyest
             #   Watch out that it keeps the integer part of the value, so as example 
             #   bot 3.3 and 3.9 are casted to 3

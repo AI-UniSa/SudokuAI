@@ -1,7 +1,6 @@
 
-/__pycache__
+*__pycache__
 *.pyc
-/models/__pycache__
 *.pth
 /dataset/train
 /dataset/test
