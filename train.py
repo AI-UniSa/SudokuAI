@@ -13,8 +13,10 @@ from training.train_hp import *
 from training.model_zoo import ModelZoo
 from training.dataset import SudokuDataset
 
+
 def mean(l):
     return sum(l)/len(l)
+
 
 def parse_args():
     parser = ArgumentParser()
@@ -31,7 +33,7 @@ def parse_args():
     #               L->validation_set       (folder containing samples)
 
     parser.add_argument('--data', dest='data',
-                        help="Path to the dataset folder", default=os.path.join('.','dataset'))
+                        help="Path to the dataset folder", default=os.path.join('.', 'dataset'))
 
     # training hyper-parameters
     parser.add_argument('--nw', dest='nw', help="number of workers for the dataloader",
@@ -55,6 +57,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     model.train()
     for X, y in tqdm(train_loader, desc='Train     '):
@@ -67,16 +70,16 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
         o = model(X)
         o = criterion.activate(o)
 
-        loss = criterion.evaluate(o, y) 
+        loss = criterion.evaluate(o, y)
         loss.backward()
 
         optimizer.step()
-    
+
     model.eval()
     with torch.no_grad():
         val_loss = []
         val_acc = []
-        
+
         for X, y in tqdm(val_loader, desc='Validation'):
             X = X.to(device)
             y = y.to(device).float()
@@ -88,13 +91,13 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
 
             # TODO: fix this
             # It's not the best way to cast the output, but is surely the easyest
-            #   Watch out that it keeps the integer part of the value, so as example 
+            #   Watch out that it keeps the integer part of the value, so as example
             #   bot 3.3 and 3.9 are casted to 3
-            val_acc.append(mean((o.int()==y)))
-            
+            val_acc.append(mean((o.int() == y)))
+
     val_loss = mean(val_loss)
     val_acc = mean(mean(val_acc))
-    
+
     return val_loss, val_acc
 
 
@@ -114,9 +117,11 @@ def plot_results(loss, accuracy, experiment_name):
     plt.ylabel('Accuracy')
     plt.title('Accuracy during training')
     plt.savefig('../{}/accuracy.jpg'.format(experiment_name))
-   
+
+
 def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, device, experiment_name):
-    optimizer = torch.optim.Adam(model.parameters(),lr=lr,weight_decay=WEIGHT_DECAY)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=lr, weight_decay=WEIGHT_DECAY)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=lr * 10e-2)
     model.train()
 
@@ -127,7 +132,8 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
     prev_loss = float('inf')
     no_gain = 0
     for epoch in range(start_epoch, epochs):
-        print(f'EPOCH {epoch+1} out of {epochs}\t\t Actual best loss: {prev_loss}')
+        print(
+            f'EPOCH {epoch+1} out of {epochs}\t\t Actual best loss: {prev_loss}')
 
         val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
@@ -145,10 +151,11 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
             prev_loss = val_epoch_loss
             no_gain = 0  #  Resetting early stopping counter
 
-            save_path = os.path.join("checkpoints",experiment_name)
+            save_path = os.path.join("checkpoints", experiment_name)
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
-            torch.save(model,os.path.join(save_path, "epoch_{}.pth".format(epoch)))
+            torch.save(model, os.path.join(
+                save_path, "epoch_{}.pth".format(epoch)))
         else:
             no_gain += 1
 
@@ -159,6 +166,7 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
 
     return val_losses, val_acc
 
+
 def main():
     args = parse_args()
     experiment_name = EXP_BASE_NAME + " " + strftime("%d %b %H %M", gmtime())
@@ -166,22 +174,22 @@ def main():
     print("Using main device: " + args.device)
 
     # Model initialization
-    m=ModelZoo()
+    m = ModelZoo()
     model = m.get_model(args.model)
     model.train()
     model.to(args.device)
-    
+
     # Dataset and dataloader initialization
-    train_root = os.path.join(args.data ,"train")
-    val_root = os.path.join(args.data , "test")
+    train_root = os.path.join(args.data, "train")
+    val_root = os.path.join(args.data, "test")
     training_set = SudokuDataset(root=train_root)
     validation_set = SudokuDataset(root=val_root)
 
     train_loader = DataLoader(training_set,
-        batch_size=args.bs, num_workers=args.nw)
+                              batch_size=args.bs, num_workers=args.nw)
     val_loader = DataLoader(validation_set,
-        batch_size=args.bs, shuffle=True, num_workers=args.nw)
-    
+                            batch_size=args.bs, shuffle=True, num_workers=args.nw)
+
     # Showing what we have loaded
     print("Training set:\t{} samples".format(len(training_set)))
     print("Validation set:\t{} samples".format(len(validation_set)))
@@ -192,7 +200,7 @@ def main():
 
     if args.checkpoint is not None:
         print("Loading checkpoint {}...".format(args.checkpoint))
-        model=torch.load( args.checkpoint)
+        model = torch.load(args.checkpoint)
         # model.load_state_dict(torch.load(args.checkpoint))
         # Gatherng the starting epoch from the weights
         try:
@@ -202,13 +210,12 @@ def main():
             print("Unable to find starting epoch...\n \
                   Checkpoint file name must comprise the string '_epoch_N' in order to start from epoch N")
 
-    
     losses, accuracy = train(model, start_epoch, args.epochs, args.lr, train_loader,
-                            val_loader, criterion, args.device, experiment_name)
-    
+                             val_loader, criterion, args.device, experiment_name)
+
     # Print both accuracy and loss during training
     plot_results(losses, accuracy, experiment_name)
 
+
 if __name__ == '__main__':
     main()
-
