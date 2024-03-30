@@ -60,7 +60,7 @@ def parse_args():
 
 def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     model.train()
-    for X, y in tqdm(train_loader, desc='Train     '):
+    for X, y in train_loader:
 
         X = X.to(device).float()
         y = y.to(device).float()
@@ -131,10 +131,8 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
 
     prev_loss = float('inf')
     no_gain = 0
-    for epoch in range(start_epoch, epochs):
-        print(
-            f'EPOCH {epoch+1} out of {epochs}\t\t Actual best loss: {prev_loss}')
-
+    val_epoch_accuracy=0
+    for epoch in tqdm(range(start_epoch, epochs),desc='LOSS: {}, ACC: {}'.format(prev_loss,val_epoch_accuracy)):
         val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
 
@@ -143,8 +141,8 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
         val_acc.append(val_epoch_accuracy)
 
         # Print metrics
-        print('Current accuracy:{:.4f}'.format(val_epoch_accuracy))
-        print('Current loss:    {:.4f}'.format(val_epoch_loss))
+        #print('Current accuracy:{:.4f}'.format(val_epoch_accuracy))
+        #print('Current loss:    {:.4f}'.format(val_epoch_loss))
 
         # Early stopping management
         if val_epoch_loss < prev_loss:
