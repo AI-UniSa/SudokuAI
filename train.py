@@ -20,17 +20,12 @@ def mean(l):
 
 def parse_args():
     parser = ArgumentParser()
-    # TODO: update this
     # data
     # The dataset organization is the following:
     #   args.data:
-    #       |---> train
-    #       |       |->training_set.txt     (label csv file)
-    #       |       L->training_set         (folder containing samples)
+    #       |---> train.txt 
     #       |
-    #       L---> val
-    #               |->validation_set.txt   (label csv file)
-    #               L->validation_set       (folder containing samples)
+    #       L---> text.txt
 
     parser.add_argument('--data', dest='data',
                         help="Path to the dataset folder", default=os.path.join('.', 'dataset'))
@@ -80,7 +75,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
         val_loss = []
         val_acc = []
 
-        for X, y in tqdm(val_loader, desc='Validation'):
+        for X, y in val_loader:
             X = X.to(device)
             y = y.to(device).float()
 
@@ -132,7 +127,10 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
     prev_loss = float('inf')
     no_gain = 0
     val_epoch_accuracy=0
-    for epoch in tqdm(range(start_epoch, epochs),desc='LOSS: {}, ACC: {}'.format(prev_loss,val_epoch_accuracy)):
+    pbar = tqdm(range(start_epoch, epochs))
+
+    for epoch in pbar:
+        pbar.set_description('LOSS: {}, ACC: {}'.format(prev_loss,val_epoch_accuracy))
         val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
 
@@ -178,8 +176,8 @@ def main():
     model.to(args.device)
 
     # Dataset and dataloader initialization
-    train_root = os.path.join(args.data, "train")
-    val_root = os.path.join(args.data, "test")
+    train_root = os.path.join(args.data, "train.txt")
+    val_root = os.path.join(args.data, "test.txt")
     training_set = SudokuDataset(root=train_root)
     validation_set = SudokuDataset(root=val_root)
 

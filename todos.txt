@@ -1,1 +1,5 @@
-TODO: fare readme
+TODO: Refactoring del dataset, tutti i dati vanno in un unico file, così la 
+    lettura del dataset diventa più veloce. Aggiornare anche il codice per creare nuovi 
+    dati(dovrà appendere i sudoku al file) e il readme
+TODO: Diminuire dimensione rete, provare banalmente con 3 layer lineari 81-162-81 se non proprio 81-81
+TODO: fare reuirements per bene
