@@ -8,20 +8,17 @@ from models.utils import constants as c
 
 
 class Sudoku_MLP(nn.Module):
-    def __init__(self, inner_size: int = 5, num_layers=6, *args, **kwargs) -> None:
+    def __init__(self, inner_size: int = 10, num_layers=4, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        input_layers_num = int(num_layers/2)
-        output_layers_num = num_layers-input_layers_num
+        output_layers_num = int(num_layers/2)
+        input_layers_num = num_layers-output_layers_num
 
-        self._input_layer = MLP(c.INPUT_SIZE, inner_size, input_layers_num)
-        self._output_layer = MLP(inner_size, c.OUTPUT_SIZE, output_layers_num)
+        self._model = nn.Sequential(MLP(c.INPUT_SIZE, inner_size, input_layers_num),
+                            nn.ReLU(), MLP(inner_size, c.OUTPUT_SIZE, output_layers_num))
 
     def forward(self, x: t.Tensor):
-        x = self._input_layer(x)
-        x = self._output_layer(x)
-        return x
-    
+        return self._model(x)
 
 
 class Sudoku_MLP_helper(Helper):
