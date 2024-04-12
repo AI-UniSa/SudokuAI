@@ -4,3 +4,4 @@ pandas==2.2.1
 sudokum==0.0.1
 torch==2.2.2
 tqdm==4.66.1
+torchinfo

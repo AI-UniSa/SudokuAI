@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from training.train_hp import *
 from training.model_zoo import ModelZoo
 from training.dataset import SudokuDataset
+from torchinfo import summary
 
 
 def mean(l):
@@ -174,6 +175,7 @@ def main():
     model = m.get_model(args.model)
     model.train()
     model.to(args.device)
+    summary(model)
 
     # Dataset and dataloader initialization
     train_root = os.path.join(args.data, "train.txt")
@@ -182,7 +184,7 @@ def main():
     validation_set = SudokuDataset(root=val_root)
 
     train_loader = DataLoader(training_set,
-                              batch_size=args.bs, num_workers=args.nw)
+                            batch_size=args.bs, num_workers=args.nw)
     val_loader = DataLoader(validation_set,
                             batch_size=args.bs, shuffle=True, num_workers=args.nw)
 
@@ -204,10 +206,10 @@ def main():
             start_epoch = int(re.findall(r'\d+', epoch_str)[0])
         except:
             print("Unable to find starting epoch...\n \
-                  Checkpoint file name must comprise the string '_epoch_N' in order to start from epoch N")
+                Checkpoint file name must comprise the string '_epoch_N' in order to start from epoch N")
 
     losses, accuracy = train(model, start_epoch, args.epochs, args.lr, train_loader,
-                             val_loader, criterion, args.device, experiment_name)
+                            val_loader, criterion, args.device, experiment_name)
 
     # Print both accuracy and loss during training
     plot_results(losses, accuracy, experiment_name)
