@@ -26,3 +26,11 @@ class Helper(nn.Module, ABC):
         """
         raise NotImplementedError(
             f'{type(self)}\'s evaluate method has not been implemented yet')
+    
+    @abstractmethod
+    def extract(self, input: t.Tensor) -> t.Tensor:
+        """
+            This method extracts the output of the network from the ACTIVATED output
+        """
+        raise NotImplementedError(
+            f'{type(self)}\'s extract method has not been implemented yet')

@@ -12,7 +12,8 @@ from argparse import ArgumentParser
 from training.train_hp import *
 from training.model_zoo import ModelZoo
 from training.dataset import SudokuDataset
-from torchinfo import summary
+
+# from torchinfo import summary
 
 
 def mean(l):
@@ -57,16 +58,16 @@ def parse_args():
 def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     model.train()
     for X, y in train_loader:
-
         X = X.to(device).float()
         y = y.to(device).float()
 
         optimizer.zero_grad()
 
         o = model(X)
-        o = criterion.activate(o)
+        o_act = criterion.activate(o)
 
-        loss = criterion.evaluate(o, y)
+
+        loss = criterion.evaluate(o, y) # NOTE: in CNN is CrossEntropyLoss and requires not activeted output
         loss.backward()
 
         optimizer.step()
@@ -75,24 +76,35 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     with torch.no_grad():
         val_loss = []
         val_acc = []
+        val_sudoku_acc = []
 
         for X, y in val_loader:
             X = X.to(device)
             y = y.to(device).float()
 
             o = model(X)
-            o = criterion.activate(o)
+            o_act = criterion.activate(o)
 
-            val_loss.append(criterion.evaluate(o, y))
+            val_loss.append(criterion.evaluate(o, y))# NOTE: in CNN is CrossEntropyLoss and requires not activeted output
 
             # TODO: fix this
             # It's not the best way to cast the output, but is surely the easyest
             #   Watch out that it keeps the integer part of the value, so as example
             #   bot 3.3 and 3.9 are casted to 3
-            val_acc.append(mean((o.int() == y)))
+
+            # val_acc.append(mean((o.int() == y)))
+            val_acc.append(mean((criterion.extract(o_act) == y))) # Changed to generalize
+
+            # Check if a complete sudoku is solved
+            sudoku_acc = torch.all(criterion.extract(o_act) == y, dim = 1) # B x 81 -> B
+            val_sudoku_acc.append(mean(sudoku_acc))
+            print(val_sudoku_acc)
 
     val_loss = mean(val_loss)
     val_acc = mean(mean(val_acc))
+    val_sudoku_acc = mean(val_sudoku_acc)
+
+    print("Sudoku accuracy is: {:.4f}".format(val_sudoku_acc))
 
     return val_loss, val_acc
 
@@ -175,7 +187,7 @@ def main():
     model = m.get_model(args.model)
     model.train()
     model.to(args.device)
-    summary(model,depth=5)
+    # summary(model,depth=5)
 
     # Dataset and dataloader initialization
     train_root = os.path.join(args.data, "train.txt")
@@ -184,9 +196,9 @@ def main():
     validation_set = SudokuDataset(root=val_root)
 
     train_loader = DataLoader(training_set,
-                            batch_size=args.bs, num_workers=args.nw)
-    val_loader = DataLoader(validation_set,
                             batch_size=args.bs, shuffle=True, num_workers=args.nw)
+    val_loader = DataLoader(validation_set,
+                            batch_size=args.bs, shuffle=True, num_workers=args.nw) # TODO: check if is it the case to shuffle the validation set
 
     # Showing what we have loaded
     print("Training set:\t{} samples".format(len(training_set)))

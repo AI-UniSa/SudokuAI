@@ -32,6 +32,9 @@ class Sudoku_MLP_helper(Helper):
 
     def evaluate(self, input: t.Tensor, target: t.Tensor) -> t.Tensor:
         return self._loss(input, target)
+    
+    def extract(self, input: t.Tensor) -> t.Tensor:
+        return input.int()
 
 
 if __name__ == '__main__':

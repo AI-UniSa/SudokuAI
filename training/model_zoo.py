@@ -1,5 +1,6 @@
 from utils import Singleton
 from models import sudoku_MLP as mlp
+from models import sudoku_CNN as cnn
 
 
 class ModelZoo(metaclass=Singleton):
@@ -13,8 +14,10 @@ class ModelZoo(metaclass=Singleton):
 
         # Here we store the couples name->initializer,
         #   so we don't initialize all the models
-        self._all_models = {'mlp': mlp.Sudoku_MLP}
-        self._helpers = {'mlp': mlp.Sudoku_MLP_helper()}
+        self._all_models = {'mlp': mlp.Sudoku_MLP,
+                            'cnn': cnn.Sudoku_CNN}
+        self._helpers = {'mlp': mlp.Sudoku_MLP_helper(),
+                         'cnn': cnn.Sudoku_CNN_helper()}
 
         # TODO: maybe add a dict with args for each initializer,
         #       don't know if it's helpful or not
@@ -26,7 +29,14 @@ class ModelZoo(metaclass=Singleton):
         try:
             return self._instances[model_name]
         except:
-            model = self._all_models[model_name]()
+            import json
+
+            # Open the JSON file with configuration
+            with open(model_name + '.json', 'r') as f:
+                # Carica il contenuto del file JSON in un dizionario
+                data = json.load(f)
+
+            model = self._all_models[model_name](**data)
             self._instances[model_name] = model
             return model
 
