@@ -1,7 +1,7 @@
 {
     "input_channels": 1, 
-    "num_blocks": 3, 
-    "filters": 32, 
+    "num_blocks": 10, 
+    "filters": 512, 
     "kernel_size": 3, 
     "activation_fn": "relu", 
     "decay": 0.99
