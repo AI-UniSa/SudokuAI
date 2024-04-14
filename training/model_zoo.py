@@ -45,11 +45,13 @@ class ModelZoo(metaclass=Singleton):
 
         return self._helpers[model_name]
 
-    def to(self, device):
+    def to(self, device): # TODO: questo non ha senso, non ci sono metodi del genere e neanche servono
         if device == 'cpu':
             self.cpu()
         if device == 'gpu':
             self.cuda()
+        if device == 'mps':
+            self.mps()
 
         raise ValueError(
             f'{device} is not a supported device. Valid choiches are cpu or gpu')
