@@ -98,7 +98,6 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
             # Check if a complete sudoku is solved
             sudoku_acc = torch.all(criterion.extract(o_act) == y, dim = 1) # B x 81 -> B
             val_sudoku_acc.append(mean(sudoku_acc))
-            print(val_sudoku_acc)
 
     val_loss = mean(val_loss)
     val_acc = mean(mean(val_acc))
