@@ -24,7 +24,8 @@ class SudokuDataset(Dataset):
 
 class SudokuStandardize(t.nn.Module):
     def forward(self, img, label):
-        return img/9 - 0.5, label/9 - 0.5
+        # return img/9 - 0.5, label/9 - 0.5
+        return img/9 - 0.5, label #Label not standardized because after the argmax we need the original values
 
 if __name__ == '__main__':
     d = SudokuDataset(os.path.join(
