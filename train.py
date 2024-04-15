@@ -100,10 +100,12 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
             #   bot 3.3 and 3.9 are casted to 3
 
             # val_acc.append(mean((o.int() == y)))
-            val_acc.append(mean((criterion.extract(o_act) == y))) # Changed to generalize
+            val_acc.append(mean((criterion.extract(o_act) == int((y + 0.5)*9))))
+            # print("Extracted: ", criterion.extract(o_act))
+            # print("Ground truth: ", int((y + 0.5)*9))
 
             # Check if a complete sudoku is solved
-            sudoku_acc = torch.all(criterion.extract(o_act) == y, dim = 1) # B x 81 -> B
+            sudoku_acc = torch.all(criterion.extract(o_act) == int((y + 0.5)*9), dim = 1) # B x 81 -> B
             val_sudoku_acc.append(mean(sudoku_acc))
 
     train_loss = mean(train_loss)
