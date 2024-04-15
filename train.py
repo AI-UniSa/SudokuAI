@@ -8,10 +8,11 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from argparse import ArgumentParser
+from torchvision.transforms import v2
 
 from training.train_hp import *
 from training.model_zoo import ModelZoo
-from training.dataset import SudokuDataset
+from training.dataset import SudokuDataset, SudokuStandardize
 
 # from torchinfo import summary
 
@@ -57,6 +58,10 @@ def parse_args():
 
 def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     model.train()
+
+    train_loss = []
+    train_acc = []
+
     for X, y in train_loader:
         X = X.to(device).float()
         y = y.to(device).float()
@@ -69,6 +74,8 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
 
         loss = criterion.evaluate(o, y) # NOTE: in CNN is CrossEntropyLoss and requires not activeted output
         loss.backward()
+
+        train_loss.append(loss.item())
 
         optimizer.step()
 
@@ -99,31 +106,35 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
             sudoku_acc = torch.all(criterion.extract(o_act) == y, dim = 1) # B x 81 -> B
             val_sudoku_acc.append(mean(sudoku_acc))
 
+    train_loss = mean(train_loss)
     val_loss = mean(val_loss)
     val_acc = mean(mean(val_acc))
     val_sudoku_acc = mean(val_sudoku_acc)
 
     print("Sudoku accuracy is: {:.4f}".format(val_sudoku_acc))
 
-    return val_loss, val_acc
+    return train_loss, val_loss.item(), val_acc.item()
 
 
-def plot_results(loss, accuracy, experiment_name):
+def plot_results(train_losses, val_losses, val_accuracies, experiment_name):
     # Plot loss during training
     plt.figure(figsize=(10, 5))
-    plt.plot(loss)
+    plt.plot(train_losses, 'b')
+    plt.plot(val_losses, 'r')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
-    plt.title('Loss during training')
-    plt.savefig('../{}/loss.jpg'.format(experiment_name))
+    plt.title('Loss during training and validation')
+    plt.legend(['Train', 'Validation'])
+
+    plt.savefig('checkpoints/{}/loss.jpg'.format(experiment_name))
 
     # Plot each metric during training
     plt.figure(figsize=(10, 5))
-    plt.plot(accuracy)
+    plt.plot(val_accuracies, 'r')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.title('Accuracy during training')
-    plt.savefig('../{}/accuracy.jpg'.format(experiment_name))
+    plt.savefig('checkpoints/{}/accuracy.jpg'.format(experiment_name))
 
 
 def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, device, experiment_name):
@@ -133,6 +144,7 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
     model.train()
 
     # training and validation
+    train_losses = []
     val_losses = []
     val_acc = []
 
@@ -143,10 +155,11 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
 
     for epoch in pbar:
         pbar.set_description('LOSS: {}, ACC: {}'.format(prev_loss,val_epoch_accuracy))
-        val_epoch_loss, val_epoch_accuracy = one_epoch(
+        train_epoch_loss, val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
 
         # store the validation metrics
+        train_losses.append(train_epoch_loss)
         val_losses.append(val_epoch_loss)
         val_acc.append(val_epoch_accuracy)
 
@@ -172,7 +185,7 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
             break
         scheduler.step()
 
-    return val_losses, val_acc
+    return train_losses, val_losses, val_acc
 
 
 def main():
@@ -190,9 +203,10 @@ def main():
 
     # Dataset and dataloader initialization
     train_root = os.path.join(args.data, "train.txt")
-    val_root = os.path.join(args.data, "test.txt")
-    training_set = SudokuDataset(root=train_root)
-    validation_set = SudokuDataset(root=val_root)
+    val_root = os.path.join(args.data, "val.txt")
+    preprocess = v2.Compose([SudokuStandardize()])
+    training_set = SudokuDataset(root=train_root, preprocess=preprocess)
+    validation_set = SudokuDataset(root=val_root, preprocess=preprocess)
 
     train_loader = DataLoader(training_set,
                             batch_size=args.bs, shuffle=True, num_workers=args.nw)
@@ -219,11 +233,11 @@ def main():
             print("Unable to find starting epoch...\n \
                 Checkpoint file name must comprise the string '_epoch_N' in order to start from epoch N")
 
-    losses, accuracy = train(model, start_epoch, args.epochs, args.lr, train_loader,
+    train_losses, val_losses, val_accuracies = train(model, start_epoch, args.epochs, args.lr, train_loader,
                             val_loader, criterion, args.device, experiment_name)
 
     # Print both accuracy and loss during training
-    plot_results(losses, accuracy, experiment_name)
+    plot_results(train_losses, val_losses, val_accuracies, experiment_name)
 
 
 if __name__ == '__main__':
