@@ -28,8 +28,8 @@ class Sudoku_CNN(nn.Module):
                 self._model.append(self.create_conv_block(prev_filters, filters))
 
         # Add the final block
-        inpu_channels = self.filters[-1] if isinstance(self.filters, list) else self.filters
-        self._model.append(self.create_conv_block(filters, 10))
+        input_channels = self.filters[-1] if isinstance(self.filters, list) else self.filters
+        self._model.append(self.create_conv_block(input_channels, 9))
 
     def create_conv_block(self, in_channels=None, out_channels=None, preserve = True):
         conv_block = nn.Sequential(
@@ -64,7 +64,8 @@ class Sudoku_CNN_helper(Helper):
         return torch.softmax(input, dim=1)  # N x C x H x W -> C is the number of classes
 
     def evaluate(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        # Require NOT ACTIVATED input
+        """Require NOT ACTIVATED input"""
+
         # from input BxCxHxW to BxCx(H*W)
         input_loss = input.reshape(input.shape[0], input.shape[1], -1)
 
