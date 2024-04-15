@@ -7,19 +7,24 @@ from ast import literal_eval as listify
 
 
 class SudokuDataset(Dataset):
-    def __init__(self, root: os.PathLike):
+    def __init__(self, root: os.PathLike, preprocess=None):
         super(SudokuDataset, self).__init__()
         self.data = pd.read_csv(root)
         self.data.dropna(inplace=True)
+        self.preprocess = preprocess
 
     def __getitem__(self, index):
         row=self.data.loc[index]
-        return t.Tensor(listify(row['data'])), t.Tensor(listify(row['gt']))
+        return self.preprocess(t.Tensor(listify(row['data'])), t.Tensor(listify(row['gt'])))
 
 
     def __len__(self):
         return len(self.data)
 
+
+class SudokuStandardize(t.nn.Module):
+    def forward(self, img, label):
+        return img/9 - 0.5, label/9 - 0.5
 
 if __name__ == '__main__':
     d = SudokuDataset(os.path.join(
