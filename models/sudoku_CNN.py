@@ -27,9 +27,10 @@ class Sudoku_CNN(nn.Module):
                 filters = filters[i] if isinstance(filters, list) else filters
                 self._model.append(self.create_conv_block(prev_filters, filters))
 
-        # Add the final block
-        input_channels = self.filters[-1] if isinstance(self.filters, list) else self.filters
-        self._model.append(self.create_conv_block(input_channels, 9))
+        # Dense layers
+        self._model.append(nn.Flatten())
+        # TODO: Consider to give in input also the original sudoku
+        self._model.append(nn.Linear(filters * 81, 9*9*9)) # Output of last cnn block -> 9x9 grid with 9 possible values
 
     def create_conv_block(self, in_channels=None, out_channels=None, preserve = True):
         conv_block = nn.Sequential(
@@ -39,19 +40,19 @@ class Sudoku_CNN(nn.Module):
         )
         return conv_block
 
-    def forward(self, inputs):
-        # Since input is a 1x81 tensor, we need to reshape it to 1x1x9x9
-        inputs = inputs.view(-1, 1, 9, 9)
-        outputs = inputs
-        for block in self._model:
-            outputs = block(outputs)
+    def forward(self, x):
+        # Since input is a Bx81 tensor, we need to reshape it to B x 1 x 9 x 9 to emulate an image
+        x = x.view(-1, 1, 9, 9)
+        # Apply CNN blocks
+        for block in self._model[:-2]:
+            x = block(x)
 
-        return outputs
-        
-        # # now outputs are the logits
-        # probs = torch.softmax(outputs, dim=1)
-        
-        # return probs
+        # Flatten the output
+        x = self._model[-2](x)
+        # Dense layers
+        x = self._model[-1](x)
+
+        return x.reshape(x.shape[0], 9, -1) # B x C x 81
     
 class Sudoku_CNN_helper(Helper):
     def __init__(self, *args, **kwargs) -> None:
@@ -61,22 +62,17 @@ class Sudoku_CNN_helper(Helper):
         self._flatten = nn.Flatten()
 
     def activate(self, input: torch.Tensor) -> torch.Tensor:
-        return torch.softmax(input, dim=1)  # N x C x H x W -> C is the number of classes
+        return torch.softmax(input, dim=1)  # N x C x 81 -> C is the number of classes
 
     def evaluate(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Require NOT ACTIVATED input"""
-
-        # from input BxCxHxW to BxCx(H*W)
-        input_loss = input.reshape(input.shape[0], input.shape[1], -1)
-
-        # print("input_loss\n", input_loss) # B x C x 81
-        # print("target\n", target) # B x 81
-
-        return self._loss(input_loss, target.long())
+        return self._loss(input, target.long())
 
     def extract(self, input: torch.Tensor) -> torch.Tensor:
-        # Require ACTIVATED input
-        return self._flatten(torch.argmax(input, dim=1))
+        """Require ACTIVATED input"""
+        selected = torch.argmax(input, dim=1)
+        # add + 1 on class because the number of sudoku goes from 1 to 9
+        return selected + 1
     
 
 if __name__ == '__main__':
