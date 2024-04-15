@@ -62,7 +62,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     train_loss = []
     train_acc = []
 
-    for X, y in train_loader:
+    for X, y in tqdm(train_loader):
         X = X.to(device).float()
         y = y.to(device).float()
 
@@ -85,7 +85,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
         val_acc = []
         val_sudoku_acc = []
 
-        for X, y in val_loader:
+        for X, y in tqdm(val_loader):
             X = X.to(device)
             y = y.to(device).float()
 
@@ -100,12 +100,15 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
             #   bot 3.3 and 3.9 are casted to 3
 
             # val_acc.append(mean((o.int() == y)))
-            val_acc.append(mean((criterion.extract(o_act) == int((y + 0.5)*9))))
+            # val_acc.append(mean((criterion.extract(o_act) == int((y + 0.5)*9))))
+            val_acc.append(mean((criterion.extract(o_act) == y)))
+
             # print("Extracted: ", criterion.extract(o_act))
-            # print("Ground truth: ", int((y + 0.5)*9))
+            # print("Ground truth: ", y)
 
             # Check if a complete sudoku is solved
-            sudoku_acc = torch.all(criterion.extract(o_act) == int((y + 0.5)*9), dim = 1) # B x 81 -> B
+            # sudoku_acc = torch.all(criterion.extract(o_act) == int((y + 0.5)*9), dim = 1) # B x 81 -> B
+            sudoku_acc = torch.all(criterion.extract(o_act) == y, dim = 1) # B x 81 -> B
             val_sudoku_acc.append(mean(sudoku_acc))
 
     train_loss = mean(train_loss)
