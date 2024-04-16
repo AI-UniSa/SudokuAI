@@ -62,7 +62,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     train_loss = []
     train_acc = []
 
-    for X, y in tqdm(train_loader):
+    for X, y in tqdm(train_loader,desc='Training:'):
         X = X.to(device).float()
         y = y.to(device).float()
 
@@ -85,7 +85,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
         val_acc = []
         val_sudoku_acc = []
 
-        for X, y in tqdm(val_loader):
+        for X, y in tqdm(val_loader,desc='Validation:'):
             X = X.to(device)
             y = y.to(device).float()
 
@@ -116,7 +116,7 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
     val_acc = mean(mean(val_acc))
     val_sudoku_acc = mean(val_sudoku_acc)
 
-    print("Sudoku accuracy is: {:.4f}".format(val_sudoku_acc))
+    # print("Sudoku accuracy is: {:.4f}".format(val_sudoku_acc))
 
     return train_loss, val_loss.item(), val_acc.item()
 
@@ -156,11 +156,12 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
     prev_loss = float('inf')
     no_gain = 0
     val_epoch_accuracy=0
-    pbar = tqdm(range(start_epoch, epochs))
 
-    for epoch in pbar:
-        pbar.set_description('LOSS: {}, ACC: {}'.format(prev_loss,val_epoch_accuracy))
-        train_epoch_loss, val_epoch_loss, val_epoch_accuracy = one_epoch(
+    for epoch in range(start_epoch, epochs):
+        if epoch != 0:
+            print('\n\n\n\n')
+        print('##################      EPOCH {}      ##################\n\tLoss: {:.4f} \t Accuracy: {:.4f}\nLast improvement {} epochs ago'.format(epoch,prev_loss,val_epoch_accuracy,no_gain))
+        train_epoch_loss,val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
 
         # store the validation metrics

@@ -1,7 +1,8 @@
 from utils import Singleton
 from models import sudoku_MLP as mlp
 from models import sudoku_CNN as cnn
-
+import json
+import os
 
 class ModelZoo(metaclass=Singleton):
     """
@@ -29,10 +30,8 @@ class ModelZoo(metaclass=Singleton):
         try:
             return self._instances[model_name]
         except:
-            import json
-
             # Open the JSON file with configuration
-            with open(model_name + '.json', 'r') as f:
+            with open(os.path.join('models','config',model_name + '.json'), 'r') as f:
                 # Carica il contenuto del file JSON in un dizionario
                 data = json.load(f)
 
@@ -45,7 +44,7 @@ class ModelZoo(metaclass=Singleton):
 
         return self._helpers[model_name]
 
-    def to(self, device): # TODO: questo non ha senso, non ci sono metodi del genere e neanche servono
+    def to(self, device):  # TODO: questo non ha senso, non ci sono metodi del genere e neanche servono
         if device == 'cpu':
             self.cpu()
         if device == 'gpu':
