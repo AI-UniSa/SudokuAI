@@ -4,7 +4,7 @@ import numpy as np
 from collections import OrderedDict
 
 class MLP(nn.Module):
-    def __init__(self, in_size: int, out_size: int, num_layers: int = 3, dropout: list[int]  = []) -> None:
+    def __init__(self, in_size: int, out_size: int, num_layers: int = 3, dropout: list  = []) -> None:
         # feature: anche dropout parte con indice 0
         super(MLP, self).__init__()
         layers = OrderedDict()
