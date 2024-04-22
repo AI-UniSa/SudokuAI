@@ -14,8 +14,8 @@ class Sudoku_MLP(nn.Module):
         output_layers_num = int(num_layers/2)
         input_layers_num = num_layers-output_layers_num
 
-        self._model = nn.Sequential(MLP(c.INPUT_SIZE, inner_size, input_layers_num,dropout=[1]),
-                            nn.ReLU(), MLP(inner_size, c.OUTPUT_SIZE, output_layers_num,dropout=[1]))
+        self._model = nn.Sequential(MLP(c.INPUT_SIZE, inner_size, input_layers_num,dropout=[0]),
+                            nn.ReLU(), MLP(inner_size, c.OUTPUT_SIZE, output_layers_num,dropout=[0]))
 
     def forward(self, x: t.Tensor):
         return self._model(x)

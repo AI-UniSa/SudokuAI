@@ -92,15 +92,8 @@ def one_epoch(model, criterion, optimizer, train_loader, val_loader, device):
             o = model(X)
             o_act = criterion.activate(o)
 
-            val_loss.append(criterion.evaluate(o, y))# NOTE: in CNN is CrossEntropyLoss and requires not activeted output
-
-            # TODO: fix this
-            # It's not the best way to cast the output, but is surely the easyest
-            #   Watch out that it keeps the integer part of the value, so as example
-            #   bot 3.3 and 3.9 are casted to 3
-
-            # val_acc.append(mean((o.int() == y)))
-            # val_acc.append(mean((criterion.extract(o_act) == int((y + 0.5)*9))))
+            # NOTE: in CNN is CrossEntropyLoss and requires unactiveted output
+            val_loss.append(criterion.evaluate(o, y))
             val_acc.append(mean((criterion.extract(o_act) == y)))
 
             # print("Extracted: ", criterion.extract(o_act))
@@ -217,7 +210,8 @@ def main():
     train_loader = DataLoader(training_set,
                             batch_size=args.bs, shuffle=True, num_workers=args.nw)
     val_loader = DataLoader(validation_set,
-                            batch_size=args.bs, shuffle=True, num_workers=args.nw) # TODO: check if is it the case to shuffle the validation set
+                            batch_size=args.bs, shuffle=True, num_workers=args.nw) 
+    # TODO: check if is it the case to shuffle the validation set
 
     # Showing what we have loaded
     print("Training set:\t{} samples".format(len(training_set)))
@@ -230,7 +224,6 @@ def main():
     if args.checkpoint is not None:
         print("Loading checkpoint {}...".format(args.checkpoint))
         model.load_state_dict(torch.load(args.checkpoint))
-        # model.load_state_dict(torch.load(args.checkpoint))
         # Gatherng the starting epoch from the weights
         try:
             epoch_str = re.findall(r'_epoch_\d+', args.checkpoint)[0]
