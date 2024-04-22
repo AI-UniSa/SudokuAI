@@ -14,7 +14,7 @@ from training.train_hp import *
 from training.model_zoo import ModelZoo
 from training.dataset import SudokuDataset, SudokuStandardize
 
-# from torchinfo import summary
+from torchinfo import summary
 
 
 def mean(l):
@@ -205,7 +205,7 @@ def main():
     model = m.get_model(args.model)
     model.train()
     model.to(args.device)
-    # summary(model,depth=5)
+    summary(model,depth=5)
 
     # Dataset and dataloader initialization
     train_root = os.path.join(args.data, "train.txt")
