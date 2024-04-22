@@ -151,9 +151,7 @@ def train(model, start_epoch, epochs, lr, train_loader, val_loader, criterion, d
     val_epoch_accuracy=0
 
     for epoch in range(start_epoch, epochs):
-        if epoch != 0:
-            print('\n\n\n\n')
-        print('##################      EPOCH {}      ##################\n\tLoss: {:.4f} \t Accuracy: {:.4f}\nLast improvement {} epochs ago'.format(epoch,prev_loss,val_epoch_accuracy,no_gain))
+        print('\n\n\n\n##################      EPOCH {}      ##################\n\tLoss: {:.4f} \t Accuracy: {:.4f}\nLast improvement {} epochs ago'.format(epoch,prev_loss,val_epoch_accuracy,no_gain))
         train_epoch_loss,val_epoch_loss, val_epoch_accuracy = one_epoch(
             model, criterion, optimizer, train_loader, val_loader, device)
 
